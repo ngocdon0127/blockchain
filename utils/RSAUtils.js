@@ -30,7 +30,10 @@ const formatPrivateKey = 'pkcs1-private-pem'
 let RSAUtils = function () {
   this.key = null;
   this.generateKeyPair = function (bitLen) {
-    return this.key = NodeRSA({b: bitLen})
+    if (bitLen) {
+      return this.key = NodeRSA({b: bitLen})
+    }
+    return this.key = NodeRSA({b: 1024})
   }
 
   this.loadKeyPair = function (str) {

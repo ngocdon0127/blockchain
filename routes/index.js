@@ -17,8 +17,22 @@ const blockChain = BlockChain();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  return res.status(200).json({
-    status: 'success'
+  return res.render('index', {
+    title: 'BlockChain',
+    user: {},
+    sidebar: {
+      active: '/'
+    }
+  })
+});
+
+router.get('/wallet', function(req, res, next) {
+  return res.render('wallet', {
+    title: 'BlockChain',
+    user: {},
+    sidebar: {
+      active: '/'
+    }
   })
 });
 
@@ -112,8 +126,12 @@ router.post('/transaction', (req, res) => {
     }
   }
   console.log(req.body);
-  req.body.inputs = JSON.parse(req.body.inputs)
-  req.body.outputs = JSON.parse(req.body.outputs)
+  try {
+    req.body.inputs = JSON.parse(req.body.inputs)
+    req.body.outputs = JSON.parse(req.body.outputs)
+  } catch (e) {
+    console.log(e);
+  }
   console.log(req.body);
   // req.body.inputs.map((coin, idx) => {
   //   coin.blockIdx = coin.bi;
@@ -139,14 +157,18 @@ router.post('/transaction', (req, res) => {
 router.get('/wallet/:address', (req, res) => {
   let balance = 0;
   let fee = 0;
+  let coins = []
+  let tmp = {}
   // console.log(blockChain.chain);
   for (var i = 1; i < blockChain.chain.length; i++) { // ignore initial block
+    tmp[i] = {}
     let block = blockChain.chain[i];
     let includeFee = block.miner.localeCompare(req.params.address) == 0
     // console.log(block.transactions);
     for (var j = 0; j < block.transactions.length; j++) {
+      tmp[i][j] = {}
       let transaction = block.transactions[j]
-      console.log(transaction);
+      // console.log(transaction);
       let detail = transaction.getDetail();
       // console.log('===============');
       // console.log(detail);
@@ -158,13 +180,40 @@ router.get('/wallet/:address', (req, res) => {
         fee += transaction.fee();
         balance += transaction.fee();
       }
+      let tmpCoins = transaction.coinsOf(req.params.address);
+      for(let k = 0; k < tmpCoins.outputCoins.length; k++) {
+        let c = tmpCoins.outputCoins[k];
+        c.blockIdx = i;
+        c.transIdx = j;
+        tmp[i][j][k] = c
+      }
+      for(let k = 0; k < tmpCoins.inputCoins.length; k++) {
+        let c = tmpCoins.inputCoins[k];
+        delete tmp[c.blockIdx][c.transIdx][c.coinIdx]
+      }
+      // coins = coins.concat(tmpCoins.outputCoins)
+    }
+  }
+  for(let i in tmp) {
+    if (tmp[i]) {
+      for(let j in tmp[i]) {
+        if (tmp[i][j]) {
+          for (let k in tmp[i][j]) {
+            if (tmp[i][j][k]) {
+              coins.push(tmp[i][j][k])
+            }
+          }
+        }
+      }
     }
   }
   return res.status(200).json({
     status: 'success',
     addr: req.params.address,
     balance: balance,
-    fee: fee
+    fee: fee,
+    coins: coins,
+    tmp
   })
 })
 

@@ -38,6 +38,29 @@ module.exports = (inputCoins, outputCoins, skipValid) => {
     return this.validAmount() ? (ai - ao) : 0
   }
 
+  transaction.coinsOf = function (addr) {
+    let result = {
+      inputCoins: [],
+      outputCoins: []
+    }
+    for(let coin of this.inputCoins) {
+      if (coin.addr == addr) {
+        result.inputCoins.push(coin)
+      }
+    }
+    for(let i = 0; i < this.outputCoins.length; i++) {
+      let coin = this.outputCoins[i]
+      if (coin.addr == addr) {
+        result.outputCoins.push({
+          addr: coin.addr,
+          val: coin.val,
+          coinIdx: i
+        })
+      }
+    }
+    return result
+  }
+
   transaction.getDetail = function () {
     let result = {}
     for (var i = 0; i < this.inputCoins.length; i++) {
