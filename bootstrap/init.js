@@ -43,6 +43,7 @@ setTimeout(() => {
   }
   console.log('start connecting to other nodes');
   for (var i = 0; i < nodes.length; i++) {
+    console.log(`trying to connect to ${nodes[i].url}`);
     for (var j = 0; j < nodes.length; j++) {
       if (i == j) {
         continue;
