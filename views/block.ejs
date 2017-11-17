@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Quản lý tài khoản</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <!-- Bootstrap 3.3.6 -->
+  <link rel="stylesheet" href="/admin/bootstrap/css/bootstrap.min.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/admin/plugins/datatables/dataTables.bootstrap.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/admin/dist/css/AdminLTE.min.css">
+  <!-- AdminLTE Skins. Choose a skin from the css/skins
+       folder instead of downloading all of them to reduce the load. -->
+  <link rel="stylesheet" href="/admin/dist/css/skins/_all-skins.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/stylesheets/flexdatalist/jquery.flexdatalist.min.css">
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <style>
+    .input-mdt{
+      cursor: help;
+    }
+    .table-responsive{
+      overflow-x: scroll;
+      overflow-y: hidden;
+      width: 100%;
+    }
+    .div-table{
+      width: 100%;
+      min-width: 800px;
+    }
+    .nav-tabs > li, .nav-pills > li {
+      float:none;
+      display:inline-block;
+      *display:inline; /* ie7 fix */
+       zoom:1; /* hasLayout ie7 trigger */
+    }
+
+    .nav-tabs, .nav-pills {
+      text-align:center;
+    }
+
+    .active {
+      background-color: #F3F6F9;
+    }
+
+    .tabs > li.active > a, .tabs > li.active > a:hover, .tabs > li.active > a:focus {
+      background-color: #F3F6F9;
+    }
+
+    .list-group-item {
+      text-decoration: underline !important;
+      color: #00F !important;
+    }
+    .row {
+      margin-left: 0px;
+      margin-right: 0px;
+    }
+  </style>
+</head>
+<body class="hold-transition skin-green sidebar-mini">
+<div class="wrapper">
+
+  <header class="main-header">
+    <% include alte-header %>
+  </header>
+  <!-- Left side column. contains the logo and sidebar -->
+  <aside class="main-sidebar">
+    <% include alte-left-sidebar %>
+  </aside>
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        Bảng điều khiển Admin
+        <small></small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Trang chủ</a></li>
+        <li><a href="/admin">Admin</a></li>
+        <li class="active">Quản lý tài khoản</li>
+      </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-xs-12">
+          
+          <!-- /.box -->
+
+          <div class="box box-primary">
+            <div class="box-header">
+              <h3 class="box-title">Tất cả nhân viên trong đề tài</h3>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body">
+              <div class="table-responsive">
+                <div class="div-table">
+                  <table id="example1" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Inputs</th>
+                      <th>Outputs</th>
+                      <th>Transaction Fee</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <% for(var i = 0; i < block.transactions.length; i++) { 
+                      var t = block.transactions[i]; 
+                      // u.level = LEVEL[u.level]
+                      %>
+                      <tr>
+                        <td><span><time class="timeago" datetime="<%= t.time %>"></time></span></td>
+                        <td>
+                          <p>
+                            <% for (let j = 0; j < t.inputCoins.length; j++) { 
+                              let c = t.inputCoins[j]
+                              %>
+                              <p>
+                                <a href='/wallet/<%= c.addr %>'><%= t.inputCoins[j].addr.substring(0, 16) + t.inputCoins[j].addr.substring(50) %></a> ( <%= t.inputCoins[j].val %> )
+                              </p>
+                              <% } %>
+                          </p>
+                        </td>
+                        <td>
+                          <p>
+                            <% for (let j = 0; j < t.outputCoins.length; j++) { 
+                              let c = t.outputCoins[j]
+                              %>
+                              <p>
+                                <a href='/wallet/<%= c.addr %>'><%= t.outputCoins[j].addr.substring(0, 16) + t.outputCoins[j].addr.substring(50) %></a> ( <%= t.outputCoins[j].val %> )
+                              </p>
+                              <% } %>
+                          </p>
+                        </td>
+                        <!-- <td><span><%= t.timestamp %></span></td> -->
+                        <td><span><%= t.fee() %></span></td>
+                      </tr>
+
+                    <% } %>
+                    
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Inputs</th>
+                      <th>Outputs</th>
+                      <th>Transaction Fee</th>
+                    </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /.box -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+
+  <!-- /.control-sidebar -->
+  <!-- Add the sidebar's background. This div must be placed
+       immediately after the control sidebar -->
+  <div class="control-sidebar-bg"></div>
+</div>
+<!-- ./wrapper -->
+
+<!-- jQuery 2.2.3 -->
+<script src="/admin/plugins/jQuery/jquery-2.2.3.min.js"></script>
+
+<script type="text/javascript">
+  // $('.flexdatalist').flexdatalist({
+  //       minLength: 0,
+  //       valuesSeparator: '_-_'
+  //     });
+</script>
+
+<!-- Bootstrap 3.3.6 -->
+<script src="/admin/bootstrap/js/bootstrap.min.js"></script>
+<!-- DataTables -->
+<script src="/admin/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/admin/plugins/datatables/dataTables.bootstrap.min.js"></script>
+<!-- SlimScroll -->
+<script src="/admin/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+<!-- FastClick -->
+<script src="/admin/plugins/fastclick/fastclick.js"></script>
+<!-- AdminLTE App -->
+<script src="/admin/dist/js/app.min.js"></script>
+<!-- AdminLTE for demo purposes -->
+<!-- <script type="text/javascript" src="/javascripts/adminjs.js"></script> -->
+<!-- page script -->
+<!-- <script src='/javascripts/footer.js'></script> -->
+<script type="text/javascript" src="/javascripts/flexdatalist/jquery.flexdatalist.min.js"></script>
+<!-- CryptoJS -->
+<script type="text/javascript" src="/javascripts/crypto-js.js"></script>
+<script type='text/javascript' src='/javascripts/bundle.js'></script>
+<script src="/javascripts/FileSaver.js"></script>
+<script src="/javascripts/jquery.timeago.js" type="text/javascript"></script>
+<script>
+  $(function () {
+    // $("#example2").DataTable();
+    $('#example1').DataTable({
+      "paging": true,
+      "lengthChange": true,
+      "searching": true,
+      "ordering": true,
+      "info": true,
+      "autoWidth": false,
+      "language": {
+        "paginate": {
+              "first":      "Trang đầu",
+              "last":       "Trang cuối",
+              "next":       "Trang sau",
+              "previous":   "Trang trước"
+          },
+          "info": "Đang xem từ _START_ tới _END_ trong tổng số _TOTAL_ bản ghi",
+          "search": "Tìm kiếm:",
+          "lengthMenu":     "Xem _MENU_ dòng",
+          "decimal":        "",
+          "emptyTable":     "Không có dữ liệu",
+          "infoEmpty":      "Đang xem từ 0 tới 0 trong tổng số 0 bản ghi",
+          "infoFiltered":   "(lọc từ tổng số _MAX_ bản ghi)",
+          "infoPostFix":    "",
+          "thousands":      ",",
+          "loadingRecords": "Đang tải...",
+          "processing":     "Đang xử lý...",
+          "zeroRecords":    "Không có bản ghi nào phù hợp",
+          "aria": {
+              "sortAscending":  ": activate to sort column ascending",
+              "sortDescending": ": activate to sort column descending"
+          }
+      }
+    }).order([0, 'asc']).draw();
+
+  });
+</script>
+<script>
+  jQuery(document).ready(function() {
+    $("time.timeago").timeago();
+  });
+  // console.log(RSAUtils);
+  var myKey = new RSAUtils();
+  function ob(x) {
+    return document.getElementById(x)
+  }
+  var SHA256 = CryptoJS.SHA256;
+  function publicKey2Address (publicKey) {
+    return SHA256(publicKey).toString()
+  }
+
+  function generateNewAddress() {
+    myKey = new RSAUtils();
+    myKey.generateKeyPair();
+    var publicKey = myKey.exportPublicKey();
+    ob('address').value = publicKey2Address(publicKey)
+    ob('txtPublicKey').value = publicKey.split('\n')[1]
+    updateBalance()
+  }
+
+  function btnExportPublicHandler(btn) {
+    exportPublicKey(myKey);
+  }
+
+  function btnExportKeyPairHandler(btn) {
+    exportKeyPair(myKey);
+  }
+
+  var ew = undefined;
+  function btnImportKeyPairHandler(btn) {
+    ew = undefined;
+    var files = document.getElementById('file-loadKeyPair').files;
+    console.log(files);
+    if (!files || !files[0]) {
+      return alert('Please select file')
+    }
+    if (typeof(Worker) !== 'undefined'){
+      if (typeof(ew) == 'undefined'){
+        ew = new Worker('/javascripts/file-worker.js');
+        ew.postMessage({
+          type: 'load',
+          file: files[0]
+        });
+        console.log('sent');
+      }
+      ew.onmessage = function (event) {
+        console.log('event');
+        var data = event.data;
+        importKeyPair(event.data.dataText)
+        console.log(data);
+        ew.terminate();
+        ew = undefined;
+      }
+    }
+    else{
+      alert('This browser does not support web worker.');
+    }
+  }
+
+  function exportPublicKey(key) {
+    var pk = key.exportPublicKey();
+    var blob = new Blob([pk], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, 'public.pem')
+  }
+
+  function exportKeyPair(key) {
+    var sk = key.exportKeyPair();
+    var blob = new Blob([sk], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, 'private.pem')
+  }
+
+  function importKeyPair(str) {
+    try {
+      myKey.loadKeyPair(str)
+      ob('address').value = publicKey2Address(myKey.exportPublicKey())
+      ob('txtPublicKey').value = myKey.exportPublicKey().split('\n')[1]
+      updateBalance()
+    } catch (e) {
+      try {
+        myKey.loadPublicKey(str)
+        ob('address').value = publicKey2Address(myKey.exportPublicKey())
+        ob('txtPublicKey').value = myKey.exportPublicKey().split('\n')[1]
+        updateBalance()
+        console.log('Public Key loaded');
+      } catch (e) {
+        return alert('Invalid key')
+      }
+    }
+  }
+
+  function updateBalance() {
+    console.log(`/wallet/${ob('address').value}`);
+    $.ajax({
+      url: `/wallet/${ob('address').value}`,
+      type: 'GET',
+      success: function (res) {
+        console.log(res);
+        ob('txtBalance').value = res.balance
+      },
+      error: function (err) {
+        console.log(err);
+      }
+    })
+  }
+
+  function btnSendHandler() {
+    sendCoin();
+  }
+
+  function sendCoin() {
+    $.ajax({
+      url: `/wallet/${ob('address').value}`,
+      type: 'GET',
+      success: function (res) {
+        console.log(res);
+        ob('txtBalance').value = res.balance
+        var availableCoins = res.coins
+        var amount = parseFloat(ob('txAmount').value);
+        var fee = parseFloat(ob('txFee').value);
+        console.log(amount);
+        var inputs = []
+        var sum = 0;
+        for (var i = 0; i < availableCoins.length; i++) {
+          var coin = availableCoins[i];
+          var input = {
+            "blockIdx": coin.blockIdx,
+            "transIdx": coin.transIdx,
+            "coinIdx": coin.coinIdx,
+            "publicKey": myKey.exportPublicKey()
+          }
+          var t = stringify(input);
+          t = SHA256(t).toString();
+          var signature = myKey.sign(t, 'base64');
+          // console.log(signature);
+          input.signature = signature
+          inputs.push(input)
+          sum += coin.val;
+          if (sum >= amount + fee) {
+            break;
+          }
+        }
+
+        if (sum < amount + fee) {
+          return alert('Not enough money')
+        }
+        
+        console.log(inputs);
+        var outputs = [{
+          addr: ob('txRecipient').value,
+          val: amount
+        }]
+        if (sum > amount + fee) {
+          outputs.push({
+            addr: publicKey2Address(myKey.exportPublicKey()),
+            val: sum - amount - fee
+          })
+        }
+        console.log(outputs);
+        $.ajax({
+          url: '/transaction',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            inputs: inputs,
+            outputs: outputs
+          }),
+          success: function (data) {
+            console.log('success');
+            console.log(data);
+          },
+          error: function (error) {
+            console.log(error);
+          }
+        })
+      },
+      error: function (err) {
+        console.log(err);
+      }
+    })
+  }
+</script>
+
+</body>
+</html>

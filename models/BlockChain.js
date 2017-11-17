@@ -70,18 +70,12 @@ module.exports = () => {
       }
       let key = new RSAUtils();
       key.loadPublicKey(coin.publicKey)
-      console.log('publicKey');
-      console.log(coin.publicKey);
-      console.log('signature');
-      console.log(coin.signature);
       let t = SHA256(stringify({
         blockIdx: coin.blockIdx,
         transIdx: coin.transIdx,
         coinIdx: coin.coinIdx,
         publicKey: coin.publicKey
       })).toString()
-      console.log('text');
-      console.log(t);
       if (!key.verify(t, coin.signature)) {
         console.log('Invalid signature');
         return false;
@@ -135,7 +129,7 @@ module.exports = () => {
         return false;
       }
       iCoins.push(Coin(oldCoin.addr, oldCoin.val, coin.blockIdx,
-        coin.transIdx, coin.coinIdx));
+        coin.transIdx, coin.coinIdx, coin.publicKey, coin.signature));
     }
 
     /**
@@ -159,6 +153,9 @@ module.exports = () => {
   }
 
   blockChain.reward = (addr, amount) => {
+    for(let i = 1; i < blockChain.currentTransactions.length; i++) {
+      amount += blockChain.currentTransactions[i].fee();
+    }
     blockChain.currentTransactions[0].outputCoins[0].addr = addr
     blockChain.currentTransactions[0].outputCoins[0].val = amount
   }
@@ -187,6 +184,7 @@ module.exports = () => {
     return SHA256(lastProof + '' + proof).toString().indexOf(DIFFICULTY) == 0;
   }
   blockChain.validChain = chain => {
+    let d1 = new Date()
     // console.log('VALIDATING CHAIN');
     // console.log(chain);
     if (chain.length < 1) {
@@ -207,7 +205,42 @@ module.exports = () => {
       }
       lastBlock = currentBlock;
     }
-    // TODO valid transactions
+    let tmp = {}
+    for (let i = 0; i < chain.length; i++) {
+      tmp[i] = {}
+      let block = chain[i];
+      let coinCreationTX = block.transactions[0];
+      tmp[i][0] = {0: 1}
+      // console.log(tmp);
+      for (let j = 1; j < block.transactions.length; j++) {
+        let t = block.transactions[j];
+        let transaction = Transaction(t.inputCoins, t.outputCoins)
+        if (!transaction.validCoinSignatures()) {
+          console.log('invalid coin signature');
+          return false;
+        }
+        if (!transaction.validAmount()) {
+          console.log('invalid amount');
+          return false;
+        }
+        for (let k = 0; k < transaction.inputCoins.length; k++) {
+          let c = transaction.inputCoins[k];
+          if (!tmp[c.blockIdx] || !tmp[c.blockIdx][c.transIdx] || !tmp[c.blockIdx][c.transIdx][c.coinIdx]) {
+            console.log('invalid inputCoins');
+            console.log(transaction);
+            return false
+          }
+          delete tmp[c.blockIdx][c.transIdx][c.coinIdx]
+        }
+        tmp[i][j] = {}
+        for (let k = 0; k < transaction.outputCoins.length; k++) {
+          tmp[i][j][k] = 1
+        }
+      }
+    }
+    
+    let d2 = new Date();
+    // console.log(`time valid ${chain.length}-len chain: ${d2.getTime() - d1.getTime()}`);
     return true;
   }
 

@@ -1,0 +1,1 @@
+browserify browser-import-rsa.js -o bundle.js && mv bundle.js ../public/javascripts/

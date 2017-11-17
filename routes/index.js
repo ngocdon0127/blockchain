@@ -67,6 +67,17 @@ router.get('/chain', (req, res) => {
   })
 })
 
+router.get('/block', (req, res) => {
+  return res.render('blocks', {
+    title: 'BlockChain',
+    user: {},
+    sidebar: {
+      active: '/block'
+    },
+    blocks: blockChain.chain
+  })
+})
+
 router.get('/block/:idx', (req, res) => {
   // console.log(blockChain);
   let fee = 0;
@@ -76,8 +87,19 @@ router.get('/block/:idx', (req, res) => {
     for (var i = 0; i < blockChain.chain[idx].transactions.length; i++) {
       fee = blockChain.chain[idx].transactions[i].fee()
     }
-    return res.status(200).json({
-      status: 'success',
+    if (req.query.datatype == 'json') {
+      return res.status(200).json({
+        status: 'success',
+        fee: fee,
+        block: blockChain.chain[idx]
+      })
+    }
+    return res.render('block', {
+      title: 'BlockChain',
+      user: {},
+      sidebar: {
+        active: '/block'
+      },
       fee: fee,
       block: blockChain.chain[idx]
     })
@@ -117,6 +139,7 @@ function mine() {
 
 router.post('/transaction', (req, res) => {
   let requiredParams = ['inputs', 'outputs'];
+  console.log(req.body);
   for (let i = 0; i < requiredParams.length; i++) {
     if (!(req.body[requiredParams[i]])) {
       return res.status(400).json({
@@ -125,7 +148,6 @@ router.post('/transaction', (req, res) => {
       })
     }
   }
-  console.log(req.body);
   try {
     req.body.inputs = JSON.parse(req.body.inputs)
     req.body.outputs = JSON.parse(req.body.outputs)
@@ -148,6 +170,24 @@ router.post('/transaction', (req, res) => {
       error: 'Invalid Transaction'
     })
   }
+  for (var i = 0; i < blockChain.nodes.length; i++) {
+    request.post({
+      url: blockChain.nodes[i].url + '/transaction',
+      body: JSON.stringify(req.body),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }, (err, response, body) => {
+      if (err) {
+        return console.log(err);
+      }
+      if (response.statusCode == 200) {
+        return console.log(body);
+      }
+      console.log(response.statusCode);
+      return console.log(body);
+    })
+  }
   return res.status(200).json({
     status: 'success',
     transaction: t
@@ -161,7 +201,7 @@ router.get('/wallet/:address', (req, res) => {
   let tmp = {}
   // console.log(blockChain.chain);
   for (var i = 1; i < blockChain.chain.length; i++) { // ignore initial block
-    tmp[i] = {}
+    tmp[i + ''] = {}
     let block = blockChain.chain[i];
     let includeFee = block.miner.localeCompare(req.params.address) == 0
     // console.log(block.transactions);
@@ -185,7 +225,7 @@ router.get('/wallet/:address', (req, res) => {
         let c = tmpCoins.outputCoins[k];
         c.blockIdx = i;
         c.transIdx = j;
-        tmp[i][j][k] = c
+        tmp[i][j][c.coinIdx] = c
       }
       for(let k = 0; k < tmpCoins.inputCoins.length; k++) {
         let c = tmpCoins.inputCoins[k];
@@ -212,8 +252,17 @@ router.get('/wallet/:address', (req, res) => {
     addr: req.params.address,
     balance: balance,
     fee: fee,
-    coins: coins,
-    tmp
+    coins: coins
+  })
+})
+
+router.get('/mixing', (req, res) => {
+  return res.render('mixing', {
+    title: 'Mixing',
+    user: {},
+    sidebar: {
+      active: '/mixing'
+    }
   })
 })
 
@@ -396,9 +445,8 @@ setInterval(() => {
           } else {
             console.log('tmpChain invalid');
           }
-          
         } else {
-          console.log('got shorter or equal chain from', node.url);
+          // console.log('got shorter or equal chain from', node.url);
         }
       } else {
         console.log('cannot fetch', node.url);
@@ -413,7 +461,7 @@ setInterval(() => {
       //   chain: blockChain.chain
       // })
     }
-    return console.log('Chain remains');
+    return;
     // return res.status(200).json({
     //   status: 'success',
     //   msg: 'Chain remains',

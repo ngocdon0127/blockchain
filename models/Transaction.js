@@ -1,3 +1,9 @@
+const stringify = require('json-stable-stringify')
+const RSAUtils = require('../utils/RSAUtils')
+const CryptoJS = require('crypto-js')
+const SHA256 = CryptoJS.SHA256
+const publicKey2Address = global.myCustomVars.function.publicKey2Address
+
 module.exports = (inputCoins, outputCoins, skipValid) => {
   let transaction = {
     time: new Date(),
@@ -80,6 +86,46 @@ module.exports = (inputCoins, outputCoins, skipValid) => {
     }
 
     return result
+  }
+
+  transaction.validCoinSignatures = function () {
+    let keys = {}
+    for (let i = 0; i < this.inputCoins.length; i++) {
+      let coin = this.inputCoins[i];
+      // console.log(coin);
+      let key = null;
+      if (!keys[coin.addr]) {
+        key = new RSAUtils();
+        key.loadPublicKey(coin.publicKey);
+        let addr_ = publicKey2Address(key.exportPublicKey())
+        if (coin.addr != addr_) {
+          console.log('invalid coin addr', coin.addr, addr_);
+          return false;
+        }
+        keys[coin.addr] = key;
+      } else {
+        key = keys[coin.addr]
+      }
+      let t = stringify({
+        blockIdx: coin.blockIdx,
+        transIdx: coin.transIdx,
+        coinIdx: coin.coinIdx,
+        publicKey: coin.publicKey
+      })
+      // console.log('text');
+      // console.log(t);
+      t = SHA256(t).toString()
+      // console.log('hash');
+      // console.log(t);
+      // console.log(coin.signature);
+      if (!key.verify(t, coin.signature)) {
+        // console.log('validate coin failed');
+        // console.log(t);
+        // console.log(coin.signature);
+        return false;
+      }
+    }
+    return true;
   }
 
   return (skipValid || transaction.validAmount()) ? transaction : null;
