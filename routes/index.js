@@ -17,6 +17,7 @@ const blockChain = BlockChain();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  return res.redirect('/wallet')
   return res.render('index', {
     title: 'BlockChain',
     user: {},
@@ -31,7 +32,7 @@ router.get('/wallet', function(req, res, next) {
     title: 'BlockChain',
     user: {},
     sidebar: {
-      active: '/'
+      active: '/wallet'
     }
   })
 });
