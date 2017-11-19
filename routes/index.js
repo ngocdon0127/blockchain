@@ -194,6 +194,27 @@ router.post('/transaction', (req, res) => {
   })
 })
 
+router.get('/transaction/:txHash', (req, res) => {
+  for (var i = blockChain.chain.length - 1; i >= 0; i--) {
+    let block = blockChain.chain[i];
+    for (var j = 0; j < block.transactions.length; j++) {
+      let tx = block.transactions[j];
+      if (tx.hash == req.params.txHash) {
+        return res.status(200).json({
+          status: 'success',
+          confirmations: blockChain.chain.length - i,
+          transaction: tx
+        })
+      }
+    }
+  }
+  return res.status(200).json({
+    status: 'success',
+    confirmations: 0,
+    transaction: null
+  })
+})
+
 router.get('/wallet/:address', (req, res) => {
   let balance = 0;
   let fee = 0;

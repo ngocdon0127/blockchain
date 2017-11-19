@@ -5,7 +5,8 @@ module.exports = (idx, transactions, proof, pHash, miner) => {
     timestamp: new Date(),
     transactions: transactions,
     proof: proof,
-    previousHash: pHash
+    previousHash: pHash,
+    merkelRoot: ''
   }
   return block;
 }

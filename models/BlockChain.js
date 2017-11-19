@@ -25,9 +25,15 @@ module.exports = () => {
   blockChain.newBlock = (proof, previousHash, miner) => {
     // console.log('blockChain.chain.length', blockChain.chain.length);
     let block = Block(blockChain.chain.length, blockChain.currentTransactions, proof, previousHash, miner);
+    // Calculate Merkel Root
+    block.merkelRoot = SHA256('').toString();
+    block.transactions.map((t, i) => {
+      block.merkelRoot = SHA256(block.merkelRoot + t.hashTx()).toString()
+    })
     blockChain.chain.push(block);
     let rewardTransaction = Transaction([], [{addr: '', val: 0}], true);
     rewardTransaction.index = 0;
+    rewardTransaction.seal();
     blockChain.currentTransactions = [rewardTransaction];
     console.log(block);
     return block;
@@ -143,6 +149,7 @@ module.exports = () => {
       // nt.transIdx = blockChain.currentTransactions.length
       // nt.coinIdx = iCoins.length // What
       nt.index = blockChain.currentTransactions.length;
+      nt.seal();
       blockChain.currentTransactions.push(nt)
       console.log('added transaction with fee:', nt.fee());
       return nt;
@@ -164,7 +171,30 @@ module.exports = () => {
     // console.log(stringify(block));
     // console.log(SHA256(stringify(block)).toString());
     // console.log('+++++++++++');
-    return SHA256(stringify(block)).toString();
+    let obj = {
+      index: block.idx,
+      miner: block.miner,
+      timestamp: block.timestamp,
+      proof: block.proof,
+      previousHash: block.pHash,
+      merkelRoot: ''
+    }
+    let merkelRoot = SHA256('').toString()
+    block.transactions.map((t, i) => {
+      let t_ = null;
+      if (i) {
+        t_ = Transaction(t.inputCoins, t.outputCoins)
+      } else {
+        t_ = Transaction(t.inputCoins, t.outputCoins, true)
+      }
+      t_.time = t.time; // Nhớ phải thêm 2 cái này
+      t_.index = t.index;
+      // console.log(t_);
+      merkelRoot = merkelRoot + t_.hashTx();
+      merkelRoot = SHA256(merkelRoot).toString()
+    })
+    obj.merkelRoot = merkelRoot;
+    return SHA256(stringify(obj)).toString();
   }
   blockChain.lastBlock = () => {
     let len = blockChain.chain.length;
@@ -259,10 +289,12 @@ module.exports = () => {
           block.transactions[idx] = Transaction(t.inputCoins, t.outputCoins)
           block.transactions[idx].time = t.time; // Nhớ phải thêm 2 cái này
           block.transactions[idx].index = t.index;
+          block.transactions[idx].seal();
         } else {
           block.transactions[idx] = Transaction(t.inputCoins, t.outputCoins, true)
           block.transactions[idx].time = t.time;
           block.transactions[idx].index = t.index;
+          block.transactions[idx].seal();
         }
         // console.log('++++++++++++++++++++++++++++++++++++++');
         // console.log('RESTORE TRANSACTION', idx, 'IN BLOCK', i);

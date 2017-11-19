@@ -4,7 +4,7 @@ let nodes = JSON.parse(require('fs').readFileSync(require('path').join(__dirname
 
 var mine = () => {
   let idx = Math.floor(Math.random() * 1000000) % nodes.length;
-  console.log('start mining on node', idx);
+  console.log('start mining on node', nodes[idx].url);
   // return;
   request.get({
     url: nodes[idx].url + '/mine'

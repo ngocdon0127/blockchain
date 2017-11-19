@@ -390,13 +390,14 @@
   function exportPublicKey(key) {
     var pk = key.exportPublicKey();
     var blob = new Blob([pk], {type: 'text/plain;charset=utf-8'});
-    saveAs(blob, 'public.pem')
+    saveAs(blob, `public.${publicKey2Address(pk)}.pem`)
   }
 
   function exportKeyPair(key) {
     var sk = key.exportKeyPair();
+    var pk = key.exportPublicKey();
     var blob = new Blob([sk], {type: 'text/plain;charset=utf-8'});
-    saveAs(blob, 'private.pem')
+    saveAs(blob, `private.${publicKey2Address(pk)}.pem`)
   }
 
   function importKeyPair(str) {
