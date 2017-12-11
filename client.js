@@ -14,7 +14,7 @@ var mine = () => {
     }
     if (response.statusCode == 200) {
       console.log('time:', JSON.parse(body).time);
-      setTimeout(mine, 2000)
+      setTimeout(mine, 5000)
     } else {
       console.log(response.statusCode);
     }

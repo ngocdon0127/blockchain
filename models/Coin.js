@@ -1,4 +1,6 @@
-module.exports = (addr, val, blockIdx, transIdx, coinIdx, publicKey, signature) => {
+
+module.exports = function (addr, val, blockIdx, transIdx,
+  coinIdx, publicKey, signature) {
   let coin = {
     addr: addr,
     val: val

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Block</title>
+  <title>Wallet History</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <!-- Bootstrap 3.3.6 -->
@@ -104,7 +104,7 @@
 
           <div class="box box-primary">
             <div class="box-header">
-              <h3 class="box-title">Transactions in this block</h3>
+              <h3 class="box-title">Transactions</h3>
             </div>
             <!-- /.box-header -->
             <div class="box-body">
@@ -113,20 +113,21 @@
                   <table id="example1" class="table table-bordered table-hover">
                     <thead>
                     <tr>
-                      <th>Transaction Hash</th>
+                      <th>No.</th>
                       <th>Timestamp</th>
                       <th>Inputs</th>
                       <th>Outputs</th>
-                      <th>Transaction Fee</th>
+                      <th>Confirmations</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <% for(var i = 0; i < block.transactions.length; i++) { 
-                      var t = block.transactions[i]; 
+                    <% for(var i = 0; i < txs.length; i++) { 
+                      var t = txs[i].tx; 
                       // u.level = LEVEL[u.level]
                       %>
                       <tr>
-                        <td><span><a href="/transaction/<%= t.hash %>"><%= t.hash.substring(0, 16) + t.hash.substring(50) %></a></span></td>
+                        <!-- <td><span><a href="/transaction/<%= t.hash %>"><%= t.hash.substring(0, 6) + t.hash.substring(50) %></a></span></td> -->
+                        <td><span><%= i %></span></td>
                         <td><span><time class="timeago" datetime="<%= t.time %>"></time></span></td>
                         <td>
                           <p>
@@ -134,7 +135,7 @@
                               let c = t.inputCoins[j]
                               %>
                               <p>
-                                <a href='/wallet/<%= c.addr %>'><%= t.inputCoins[j].addr.substring(0, 16) + t.inputCoins[j].addr.substring(50) %></a> ( <%= t.inputCoins[j].val %> )
+                                <a href='/wallet/<%= c.addr %>'><%= t.inputCoins[j].addr.substring(0, 6) + t.inputCoins[j].addr.substring(50) %></a> ( <%= t.inputCoins[j].val %> )
                               </p>
                               <% } %>
                           </p>
@@ -145,13 +146,15 @@
                               let c = t.outputCoins[j]
                               %>
                               <p>
-                                <a href='/wallet/<%= c.addr %>'><%= t.outputCoins[j].addr.substring(0, 16) + t.outputCoins[j].addr.substring(50) %></a> ( <%= t.outputCoins[j].val %> )
+                                <a href='/wallet/<%= c.addr %>'><%= t.outputCoins[j].addr.substring(0, 6) + t.outputCoins[j].addr.substring(50) %></a> ( <%= t.outputCoins[j].val %> )
                               </p>
                               <% } %>
                           </p>
                         </td>
                         <!-- <td><span><%= t.timestamp %></span></td> -->
-                        <td><span><%= t.fee() %></span></td>
+                        
+                        <% let c = txs[i].confirmations %>
+                        <td><span><%- (c > 0) ? `<button class='btn btn-success'>${c} confirmations</button>` : `<button class='btn btn-danger'>Unconfirmed Transaction</button>` %></span></td>
                       </tr>
 
                     <% } %>
@@ -159,11 +162,11 @@
                     </tbody>
                     <tfoot>
                     <tr>
-                      <th>Transaction Hash</th>
+                      <th>No.</th>
                       <th>Timestamp</th>
                       <th>Inputs</th>
                       <th>Outputs</th>
-                      <th>Transaction Fee</th>
+                      <th>Confirmations</th>
                     </tr>
                     </tfoot>
                   </table>

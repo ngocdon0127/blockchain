@@ -278,6 +278,40 @@ router.get('/wallet/:address', (req, res) => {
   })
 })
 
+router.get('/wallet/:address/history', (req, res) => {
+  let txs = [];
+  for (var i = 0; i < blockChain.chain.length; i++) {
+    let block = blockChain.chain[i];
+    for (var j = 0; j < block.transactions.length; j++) {
+      let tx = block.transactions[j];
+      let dt = tx.getDetail();
+      if (dt && (req.params.address in dt)) {
+        txs.push({tx: tx, confirmations: blockChain.chain.length - i});
+      }
+    }
+  }
+  for (var i = 0; i < blockChain.currentTransactions.length; i++) {
+    let tx = blockChain.currentTransactions[i];
+    let dt = tx.getDetail();
+      if (dt && (req.params.address in dt)) {
+        txs.push({tx: tx, confirmations: 0});
+      }
+  }
+  if (req.query.datatype == 'json') {
+    return res.status(200).json({
+      status: 'success',
+      txs: txs
+    })
+  }
+  return res.render('wallet-history', {
+    txs: txs,
+    user: {},
+    sidebar: {
+      active: '/block'
+    },
+  })
+})
+
 router.get('/mixing', (req, res) => {
   return res.render('mixing', {
     title: 'Mixing',
