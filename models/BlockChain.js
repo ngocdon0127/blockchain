@@ -11,7 +11,7 @@ let publicKey2Address = global.myCustomVars.function.publicKey2Address;
 
 // console.log(RSAUtils.exportPublicKey());
 
-const DIFFICULTY = '0000'
+const DIFFICULTY = '00'
 
 module.exports = () => {
   let blockChain = {
@@ -26,9 +26,9 @@ module.exports = () => {
     // console.log('blockChain.chain.length', blockChain.chain.length);
     let block = Block(blockChain.chain.length, blockChain.currentTransactions, proof, previousHash, miner);
     // Calculate Merkel Root
-    block.merkelRoot = SHA256('').toString();
+    block.merkleRoot = SHA256('').toString();
     block.transactions.map((t, i) => {
-      block.merkelRoot = SHA256(block.merkelRoot + t.hashTx()).toString()
+      block.merkleRoot = SHA256(block.merkleRoot + t.hashTx()).toString()
     })
     blockChain.chain.push(block);
     let rewardTransaction = Transaction([], [{addr: '', val: 0}], true);
@@ -176,11 +176,15 @@ module.exports = () => {
       miner: block.miner,
       timestamp: block.timestamp,
       proof: block.proof,
-      previousHash: block.pHash,
-      merkelRoot: ''
+      previousHash: block.previousHash,
+      merkleRoot: ''
     }
-    let merkelRoot = SHA256('').toString()
-    block.transactions.map((t, i) => {
+    obj.merkleRoot = blockChain.getMerkleRoot(block.transactions);
+    return SHA256(stringify(obj)).toString();
+  }
+  blockChain.getMerkleRoot = txs => {
+    let merkleRoot = SHA256('').toString()
+    txs.map((t, i) => {
       let t_ = null;
       if (i) {
         t_ = Transaction(t.inputCoins, t.outputCoins)
@@ -190,28 +194,33 @@ module.exports = () => {
       t_.time = t.time; // Nhớ phải thêm 2 cái này
       t_.index = t.index;
       // console.log(t_);
-      merkelRoot = merkelRoot + t_.hashTx();
-      merkelRoot = SHA256(merkelRoot).toString()
+      merkleRoot = merkleRoot + t_.hashTx();
+      merkleRoot = SHA256(merkleRoot).toString()
     })
-    obj.merkelRoot = merkelRoot;
-    return SHA256(stringify(obj)).toString();
+    return merkleRoot;
   }
   blockChain.lastBlock = () => {
     let len = blockChain.chain.length;
     return (len > 0) ? blockChain.chain[len - 1] : null;
   }
-  blockChain.proofOfWork = lastProof => {
+  
+  blockChain.proofOfWork = (lastBlock, miner, txs) => {
     let d1 = new Date();
     let proof = 0;
-    while (!(blockChain.validProof(lastProof, proof))) {
+    while (!(blockChain.validProof(lastBlock, proof, miner, txs))) {
       proof++;
     }
     let d2 = new Date();
     console.log('found nounce after', d2.getTime() - d1.getTime(), 'ms');
     return {proof: proof, time: d2.getTime() - d1.getTime()};
   }
-  blockChain.validProof = (lastProof, proof) => {
-    return SHA256(lastProof + '' + proof).toString().indexOf(DIFFICULTY) == 0;
+
+  blockChain.validProof = (lastBlock, proof, miner, txs) => {
+    let lastProof = lastBlock.proof;
+    // console.log([lastProof, proof, miner, blockChain.getMerkleRoot(txs)]);
+    // console.log(txs);
+    // console.log(SHA256([lastProof, proof, miner, blockChain.getMerkleRoot(txs)].join('')).toString());
+    return SHA256([lastProof, proof, miner, blockChain.getMerkleRoot(txs)].join('')).toString().indexOf(DIFFICULTY) == 0;
   }
   blockChain.validChain = chain => {
     let d1 = new Date()
@@ -229,7 +238,7 @@ module.exports = () => {
         console.log(`invalid hash ${blockChain.hash(lastBlock)} ${currentBlock.previousHash}`);
         return false;
       }
-      if (!(blockChain.validProof(lastBlock.proof, currentBlock.proof))) {
+      if (!(blockChain.validProof(lastBlock, currentBlock.proof, currentBlock.miner, currentBlock.transactions))) {
         console.log(`invalid proof ${lastBlock.proof} ${currentBlock.proof}`);
         return false;
       }
@@ -307,7 +316,7 @@ module.exports = () => {
     // console.log(blockChain.chain);
   }
   console.log('add initial block');
-  blockChain.newBlock(-1, 1)
+  blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
   // console.log(blockChain.chain.length);
   // console.log(blockChain);
   return blockChain;

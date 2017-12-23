@@ -126,13 +126,19 @@ router.get('/mine', (req, res) => {
 })
 
 function mine() {
+  if (!blockChain.currentTransactions || (blockChain.currentTransactions.length < 1)) {
+    let rewardTransaction = Transaction([], [{addr: '', val: 0}], true);
+    rewardTransaction.index = 0;
+    blockChain.currentTransactions = [rewardTransaction];
+  }
+  blockChain.reward(address, 12.5);
+  blockChain.currentTransactions[0].seal();
   let lastBlock = blockChain.lastBlock();
   let lastProof = lastBlock.proof;
-  let r = blockChain.proofOfWork(lastProof);
+  let r = blockChain.proofOfWork(lastBlock, address, blockChain.currentTransactions);
   proof = r.proof;
   let time = r.time;
   console.log('found new proof:', proof);
-  blockChain.reward(address, 12.5);
   blockChain.newBlock(proof, blockChain.hash(lastBlock), address);
   return time;
   // console.log(blockChain.chain);
@@ -240,7 +246,7 @@ router.get('/wallet/:address', (req, res) => {
       }
       if (includeFee) {
         fee += transaction.fee();
-        balance += transaction.fee();
+        // balance += transaction.fee(); // fees included in CoinBase transaction.
       }
       let tmpCoins = transaction.coinsOf(req.params.address);
       for(let k = 0; k < tmpCoins.outputCoins.length; k++) {
@@ -385,9 +391,9 @@ router.get('/fetch', (req, res) => {
   async (() => {
     let nodes = blockChain.nodes;
     if (!(blockChain.validChain(blockChain.chain))) {
-      console.log('this chain is invalid, reset chain');
+      console.log('this chain is invalid, reset chain: fetch');
       blockChain.chain = []
-      blockChain.newBlock(-1, 1)
+      blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
     }
     let longestChain = blockChain.chain;
     let replaced = false;
@@ -453,15 +459,16 @@ router.get('/fetch', (req, res) => {
 })
 
 setInterval(() => {
+  // return;
   if (!global.myCustomVars.const.run) {
     return;
   }
   async (() => {
     let nodes = blockChain.nodes;
     if (!(blockChain.validChain(blockChain.chain))) {
-      console.log('this chain is invalid, reset chain');
+      console.log('this chain is invalid, reset chain: interval');
       blockChain.chain = []
-      blockChain.newBlock(-1, 1)
+      blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
     }
     let longestChain = blockChain.chain;
     let replaced = false;
@@ -524,6 +531,6 @@ setInterval(() => {
     //   chain: blockChain.chain
     // })
   })()
-}, 1000)
+}, 2000)
 
 module.exports = router;

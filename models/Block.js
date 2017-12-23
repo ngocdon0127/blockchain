@@ -6,7 +6,7 @@ module.exports = (idx, transactions, proof, pHash, miner) => {
     transactions: transactions,
     proof: proof,
     previousHash: pHash,
-    merkelRoot: ''
+    merkleRoot: ''
   }
   return block;
 }
