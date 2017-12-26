@@ -25,7 +25,7 @@ module.exports = () => {
   blockChain.newBlock = (proof, previousHash, miner) => {
     // console.log('blockChain.chain.length', blockChain.chain.length);
     let block = Block(blockChain.chain.length, blockChain.currentTransactions, proof, previousHash, miner);
-    // Calculate Merkel Root
+    // Calculate Merkle Root
     block.merkleRoot = SHA256('').toString();
     block.transactions.map((t, i) => {
       block.merkleRoot = SHA256(block.merkleRoot + t.hashTx()).toString()
@@ -76,16 +76,34 @@ module.exports = () => {
       }
       let key = new RSAUtils();
       key.loadPublicKey(coin.publicKey)
-      let t = SHA256(stringify({
-        blockIdx: coin.blockIdx,
-        transIdx: coin.transIdx,
-        coinIdx: coin.coinIdx,
-        publicKey: coin.publicKey
-      })).toString()
+      // ===
+      // let t = SHA256(stringify({
+      //   blockIdx: coin.blockIdx,
+      //   transIdx: coin.transIdx,
+      //   coinIdx: coin.coinIdx,
+      //   publicKey: coin.publicKey
+      // })).toString()
+      // ===
+      let t = {outputs: outputCoins};
+      t.inputs = [];
+      inputCoins.map(ic => {
+        t.inputs.push({
+          blockIdx: coin.blockIdx,
+          transIdx: coin.transIdx,
+          coinIdx: coin.coinIdx,
+          publicKey: coin.publicKey
+        })
+      })
+      t = stringify(t);
+      console.log(t);
+      t = SHA256(t).toString();
+      t = SHA256(t).toString(); // prevent Length Extension Attack
+      console.log(t);
       if (!key.verify(t, coin.signature)) {
         console.log('Invalid signature');
         return false;
       }
+      
       // check unspent coin
       let fSpentCoin = false;
       // check in chain

@@ -335,7 +335,7 @@
   }
   var SHA256 = CryptoJS.SHA256;
   function publicKey2Address (publicKey) {
-    return SHA256(publicKey).toString()
+    return SHA256(SHA256(publicKey).toString()).toString()
   }
 
   function generateNewAddress() {
@@ -449,6 +449,7 @@
         var addresses = document.getElementsByClassName('addressTo')
         var summary = ''
         var outputs = []
+        var transactionToSign = {outputs: outputs};
         if (amounts.length != addresses.length) {
           return alert('Something went wrong')
         }
@@ -491,11 +492,11 @@
             "coinIdx": coin.coinIdx,
             "publicKey": myKey.exportPublicKey()
           }
-          var t = stringify(input);
-          t = SHA256(t).toString();
-          var signature = myKey.sign(t, 'base64');
-          // console.log(signature);
-          input.signature = signature
+          // var t = stringify(input);
+          // t = SHA256(t).toString();
+          // var signature = myKey.sign(t, 'base64');
+          // // console.log(signature);
+          // input.signature = signature
           inputs.push(input)
           sum += coin.val;
           if (sum >= totalAmount + fee) {
@@ -515,13 +516,27 @@
           })
         }
         console.log(outputs);
+        transactionToSign.inputs = inputs;
+        console.log(transactionToSign);
+        var t = stringify(transactionToSign);
+        console.log(t);
+        t = SHA256(t).toString();
+        t = SHA256(t).toString(); // prevent Length Extension Attack
+        console.log(t);
+        var signature = myKey.sign(t, 'base64');
+        console.log(signature);
+
+        for (var i = 0; i < inputs.length; i++) {
+          inputs[i].signature = signature
+        }
         $.ajax({
           url: '/transaction',
           type: 'POST',
           contentType: 'application/json',
           data: JSON.stringify({
             inputs: inputs,
-            outputs: outputs
+            outputs: outputs,
+            signature: signature
           }),
           success: function (data) {
             console.log('success');

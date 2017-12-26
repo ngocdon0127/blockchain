@@ -107,14 +107,26 @@ module.exports = (inputCoins, outputCoins, skipValid) => {
         key = keys[coin.addr]
       }
       let t = stringify({
-        blockIdx: coin.blockIdx,
-        transIdx: coin.transIdx,
-        coinIdx: coin.coinIdx,
-        publicKey: coin.publicKey
+        // blockIdx: coin.blockIdx,
+        // transIdx: coin.transIdx,
+        // coinIdx: coin.coinIdx,
+        // publicKey: coin.publicKey
+        inputs: this.inputCoins.reduce((preArr, curCoin, idx) => {
+          preArr.push({
+            // addr: curCoin.addr,
+            // val: curCoin.val,
+            blockIdx: curCoin.blockIdx,
+            transIdx: curCoin.transIdx,
+            coinIdx: curCoin.coinIdx,
+            publicKey: curCoin.publicKey
+          })
+          return preArr;
+        }, []),
+        outputs: this.outputCoins
       })
       // console.log('text');
       // console.log(t);
-      t = SHA256(t).toString()
+      t = SHA256(SHA256(t).toString()).toString();
       // console.log('hash');
       // console.log(t);
       // console.log(coin.signature);
@@ -130,22 +142,52 @@ module.exports = (inputCoins, outputCoins, skipValid) => {
 
   transaction.hashTx = function () {
     let obj = {
-      inputCoins: this.inputCoins,
-      outputCoins: this.outputCoins
+      inputs: this.inputCoins.reduce((preArr, curCoin, idx) => {
+        preArr.push({
+          // addr: curCoin.addr,
+          // val: curCoin.val,
+          blockIdx: curCoin.blockIdx,
+          transIdx: curCoin.transIdx,
+          coinIdx: curCoin.coinIdx,
+          publicKey: curCoin.publicKey
+        })
+        return preArr;
+      }, []),
+      outputs: this.outputCoins
     }
     // console.log(stringify(obj));
     // console.log(SHA256(stringify(obj)).toString());
-    return SHA256(stringify(obj)).toString()
+    // console.log('=========== HASH ============');
+    // console.log(obj);
+    // console.log(stringify(obj));
+    // console.log(SHA256(SHA256(stringify(obj)).toString()).toString());
+    // console.log('============ /HASH ===========');
+    return SHA256(SHA256(stringify(obj)).toString()).toString();
   }
 
   transaction.seal = function () {
     let obj = {
-      inputCoins: this.inputCoins,
-      outputCoins: this.outputCoins
+      inputs: this.inputCoins.reduce((preArr, curCoin, idx) => {
+        preArr.push({
+          // addr: curCoin.addr,
+          // val: curCoin.val,
+          blockIdx: curCoin.blockIdx,
+          transIdx: curCoin.transIdx,
+          coinIdx: curCoin.coinIdx,
+          publicKey: curCoin.publicKey
+        })
+        return preArr;
+      }, []),
+      outputs: this.outputCoins
     }
+    // console.log('========== SEAL =============');
+    // console.log(obj);
+    // console.log(stringify(obj));
+    // console.log(SHA256(SHA256(stringify(obj)).toString()).toString());
+    // console.log('=========== / SEAL ============');
     // console.log(stringify(obj));
     // console.log(SHA256(stringify(obj)).toString());
-    return this.hash = SHA256(stringify(obj)).toString()
+    return this.hash = SHA256(SHA256(stringify(obj)).toString()).toString()
   }
 
   transaction.seal();
