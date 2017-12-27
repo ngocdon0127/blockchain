@@ -22,9 +22,9 @@ module.exports = () => {
   blockChain.newNode = url => {
     blockChain.nodes.push(new Node(url))
   }
-  blockChain.newBlock = (proof, previousHash, miner) => {
+  blockChain.newBlock = (proof, previousHash, miner, timestamp) => {
     // console.log('blockChain.chain.length', blockChain.chain.length);
-    let block = Block(blockChain.chain.length, blockChain.currentTransactions, proof, previousHash, miner);
+    let block = Block(blockChain.chain.length, blockChain.currentTransactions, proof, previousHash, miner, timestamp);
     // Calculate Merkle Root
     block.merkleRoot = SHA256('').toString();
     block.transactions.map((t, i) => {
@@ -446,7 +446,8 @@ module.exports = () => {
     // console.log(blockChain.chain);
   }
   console.log('add initial block');
-  blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
+  blockChain.currentTransactions = [];
+  blockChain.newBlock(-1, 1, 'SatoshiNakamoto', 1)
   // console.log(blockChain.chain.length);
   // console.log(blockChain);
   return blockChain;

@@ -22,6 +22,28 @@ let CommunicationUtils = function () {
       })
     }
   }
+
+  this.propagateBlock = function (block, nodes) {
+    for (var i = 0; i < nodes.length; i++) {
+      console.log('propagating block to', nodes[i].url);
+      request.post({
+        url: nodes[i].url + '/block',
+        body: JSON.stringify(block),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }, (err, response, body) => {
+        if (err) {
+          return console.log(err);
+        }
+        if (response.statusCode == 200) {
+          return console.log(body);
+        }
+        console.log(response.statusCode);
+        return console.log(body);
+      })
+    }
+  }
 }
 
 module.exports = CommunicationUtils;

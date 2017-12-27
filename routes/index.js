@@ -157,9 +157,30 @@ function mine() {
   let time = r.time;
   console.log('found new proof:', proof);
   blockChain.newBlock(proof, blockChain.hash(lastBlock), address);
+  CommunicationUtils.propagateBlock(blockChain.lastBlock(), blockChain.nodes);
   return time;
   // console.log(blockChain.chain);
 }
+
+router.post('/block', (req, res) => {
+  let requiredParams = ['proof', 'previousHash', 'merkleRoot', 'miner'];
+  console.log(req.body);
+  for (let i = 0; i < requiredParams.length; i++) {
+    if (!(req.body[requiredParams[i]])) {
+      return res.status(400).json({
+        status: 'error',
+        error: `Missing ${requiredParams[i]}`
+      })
+    }
+  }
+  let tmpChain = JSON.parse(JSON.stringify(blockChain.chain));
+  tmpChain.push(req.body);
+  if (blockChain.validChain(tmpChain)) {
+    console.log('Heard about a new valid block');
+    blockChain.updateChain(tmpChain);
+    CommunicationUtils.propagateBlock(req.body, blockChain.nodes);
+  }
+})
 
 router.post('/transaction', (req, res) => {
   let requiredParams = ['inputs', 'outputs'];
@@ -411,7 +432,8 @@ router.get('/fetch', (req, res) => {
     if (!(blockChain.validChain(blockChain.chain))) {
       console.log('this chain is invalid, reset chain: fetch');
       blockChain.chain = []
-      blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
+      blockChain.currentTransactions = [];
+      blockChain.newBlock(-1, 1, 'SatoshiNakamoto', 1)
     }
     let longestChain = blockChain.chain;
     let replaced = false;
@@ -477,7 +499,7 @@ router.get('/fetch', (req, res) => {
 })
 
 setInterval(() => {
-  // return;
+  return;
   if (!global.myCustomVars.const.run) {
     return;
   }
@@ -486,7 +508,8 @@ setInterval(() => {
     if (!(blockChain.validChain(blockChain.chain))) {
       console.log('this chain is invalid, reset chain: interval');
       blockChain.chain = []
-      blockChain.newBlock(-1, 1, global.myCustomVars.const.address)
+      blockChain.currentTransactions = [];
+      blockChain.newBlock(-1, 1, 'SatoshiNakamoto', 1)
     }
     let longestChain = blockChain.chain;
     let replaced = false;
@@ -549,6 +572,6 @@ setInterval(() => {
     //   chain: blockChain.chain
     // })
   })()
-}, 2000)
+}, 10000)
 
 module.exports = router;
