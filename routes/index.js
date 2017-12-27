@@ -126,6 +126,14 @@ router.get('/mine', (req, res) => {
   })
 })
 
+setInterval(function () {
+  if (Math.random() >= 0.5) {
+    global.myCustomVars.const.mining = 1;
+    mine();
+    global.myCustomVars.const.mining = 0
+  }
+}, 3000)
+
 function mine() {
   if (!blockChain.currentTransactions || (blockChain.currentTransactions.length < 1)) {
     let rewardTransaction = Transaction([], [{addr: '', val: 0}], true);
@@ -163,6 +171,12 @@ function mine() {
 }
 
 router.post('/block', (req, res) => {
+  if (global.myCustomVars.mining == 1) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'Ignore new block'
+    })
+  }
   let requiredParams = ['proof', 'previousHash', 'merkleRoot', 'miner'];
   console.log(req.body);
   for (let i = 0; i < requiredParams.length; i++) {
@@ -180,6 +194,9 @@ router.post('/block', (req, res) => {
     blockChain.updateChain(tmpChain);
     CommunicationUtils.propagateBlock(req.body, blockChain.nodes);
   }
+  return res.status(200).json({
+    status: 'success'
+  })
 })
 
 router.post('/transaction', (req, res) => {
@@ -499,7 +516,7 @@ router.get('/fetch', (req, res) => {
 })
 
 setInterval(() => {
-  return;
+  // return;
   if (!global.myCustomVars.const.run) {
     return;
   }

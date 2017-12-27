@@ -11,7 +11,7 @@ let publicKey2Address = global.myCustomVars.function.publicKey2Address;
 
 // console.log(RSAUtils.exportPublicKey());
 
-const DIFFICULTY = '00'
+const DIFFICULTY = '0'
 
 module.exports = () => {
   let blockChain = {
@@ -302,7 +302,6 @@ module.exports = () => {
     // console.log(SHA256(stringify(block)).toString());
     // console.log('+++++++++++');
     let obj = {
-      index: block.idx,
       miner: block.miner,
       timestamp: block.timestamp,
       proof: block.proof,
@@ -417,10 +416,11 @@ module.exports = () => {
     // console.log('START UPDATING CHAIN');
     // console.log(chain);
     // console.log('CHAIN LEN', chain.length);
-    blockChain.chain = JSON.parse(JSON.stringify(chain));
-    for (var i = 0; i < blockChain.chain.length; i++) {
+    let chain_ = JSON.parse(JSON.stringify(chain));
+    for (var i = 0; i < chain_.length; i++) {
       // console.log('START RESTORING BLOCK', i);
-      let block = blockChain.chain[i];
+      let block = chain_[i];
+      block.index = i;
       // restore Block functions
       // restore Transaction functions
       block.transactions.map((t, idx) => {
@@ -442,13 +442,14 @@ module.exports = () => {
         // console.log('RESTORE TRANSACTION', idx, 'IN BLOCK', i);
       })
     }
+    blockChain.chain = chain_;
     // console.log('DONE UPDATING CHAIN');
-    // console.log(blockChain.chain);
+    // console.log(chain_);
   }
   console.log('add initial block');
   blockChain.currentTransactions = [];
   blockChain.newBlock(-1, 1, 'SatoshiNakamoto', 1)
-  // console.log(blockChain.chain.length);
+  // console.log(chain_.length);
   // console.log(blockChain);
   return blockChain;
 }
