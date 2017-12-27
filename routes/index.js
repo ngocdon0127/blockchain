@@ -7,6 +7,7 @@ const BlockChain = require('../models/BlockChain');
 const Transaction = require('../models/Transaction');
 const CryptoJS = require('crypto-js');
 const SHA256 = CryptoJS.SHA256;
+const CommunicationUtils = new (require('../utils/CommunicationUtils'))();
 
 // const address = SHA256((new Date()).getTime() + '' + Math.random() * 1000000).toString();
 // const address = SHA256(process.env.PORT).toString();
@@ -131,6 +132,22 @@ function mine() {
     rewardTransaction.index = 0;
     blockChain.currentTransactions = [rewardTransaction];
   }
+  // for (var i = 1; i < blockChain.currentTransactions.length; i++) {
+  //   let tx = blockChain.currentTransactions[i];
+  //   let previousPendingTxs = blockChain.currentTransactions.slice(0, i - 1);
+  //   if (!blockChain.validTx(tx.inputCoins, tx.outputCoins, blockChain.chain, previousPendingTxs)) {
+  //     console.log('omit tx', i, 'in pending txs');
+
+  //   }
+  // }
+  blockChain.currentTransactions = blockChain.currentTransactions.reduce((preArr, curTx, idx) => {
+    if (!idx || blockChain.validTx(curTx.inputCoins, curTx.outputCoins, blockChain.chain, preArr)) {
+      preArr.push(curTx)
+    } else {
+      console.log('omit tx', idx, 'in pending txs');
+    }
+    return preArr;
+  }, [])
   blockChain.reward(address, 12.5);
   blockChain.currentTransactions[0].seal();
   let lastBlock = blockChain.lastBlock();
@@ -177,24 +194,25 @@ router.post('/transaction', (req, res) => {
       error: 'Invalid Transaction'
     })
   }
-  for (var i = 0; i < blockChain.nodes.length; i++) {
-    request.post({
-      url: blockChain.nodes[i].url + '/transaction',
-      body: JSON.stringify(req.body),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }, (err, response, body) => {
-      if (err) {
-        return console.log(err);
-      }
-      if (response.statusCode == 200) {
-        return console.log(body);
-      }
-      console.log(response.statusCode);
-      return console.log(body);
-    })
-  }
+  CommunicationUtils.propagateTransaction(req.body, blockChain.nodes);
+  // for (var i = 0; i < blockChain.nodes.length; i++) {
+  //   request.post({
+  //     url: blockChain.nodes[i].url + '/transaction',
+  //     body: JSON.stringify(req.body),
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     }
+  //   }, (err, response, body) => {
+  //     if (err) {
+  //       return console.log(err);
+  //     }
+  //     if (response.statusCode == 200) {
+  //       return console.log(body);
+  //     }
+  //     console.log(response.statusCode);
+  //     return console.log(body);
+  //   })
+  // }
   return res.status(200).json({
     status: 'success',
     transaction: t

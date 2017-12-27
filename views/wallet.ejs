@@ -541,9 +541,15 @@
           success: function (data) {
             console.log('success');
             console.log(data);
+            alert('success')
           },
           error: function (error) {
             console.log(error);
+            try {
+              alert(error.responseJSON.error)
+            } catch (e) {
+              alert('error')
+            }
           }
         })
       },

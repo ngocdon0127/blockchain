@@ -50,14 +50,144 @@ module.exports = () => {
      */
     console.log(inputCoins);
     console.log(outputCoins);
+    let iCoins = blockChain.validTx(inputCoins, outputCoins, blockChain.chain, blockChain.currentTransactions);
+    if (!iCoins) {
+      return false;
+    }
+    // for (let i = 0; i < inputCoins.length; i++) {
+    //   let coin = inputCoins[i];
+    //   if (coin.blockIdx >= blockChain.chain.length) {
+    //     console.log('invalid blockIdx', coin.blockIdx);
+    //     return false;
+    //   }
+    //   let block = blockChain.chain[coin.blockIdx];
+    //   if (coin.transIdx >= block.transactions.length) {
+    //     console.log('invalid transIdx', coin.transIdx);
+    //     return false;
+    //   }
+    //   let transaction = block.transactions[coin.transIdx];
+    //   if (coin.coinIdx >= transaction.outputCoins.length) {
+    //     console.log('invalid coinIdx', coin.coinIdx);
+    //     return false;
+    //   }
+    //   // TODO check signature
+    //   let addr = publicKey2Address(coin.publicKey);
+    //   let oldCoin = transaction.outputCoins[coin.coinIdx]
+    //   if (addr != oldCoin.addr) {
+    //     console.log('DIFFERENT addr');
+    //     return false
+    //   }
+    //   let key = new RSAUtils();
+    //   key.loadPublicKey(coin.publicKey)
+    //   // ===
+    //   // let t = SHA256(stringify({
+    //   //   blockIdx: coin.blockIdx,
+    //   //   transIdx: coin.transIdx,
+    //   //   coinIdx: coin.coinIdx,
+    //   //   publicKey: coin.publicKey
+    //   // })).toString()
+    //   // ===
+    //   let t = {outputs: outputCoins};
+    //   t.inputs = [];
+    //   inputCoins.map(ic => {
+    //     t.inputs.push({
+    //       blockIdx: coin.blockIdx,
+    //       transIdx: coin.transIdx,
+    //       coinIdx: coin.coinIdx,
+    //       publicKey: coin.publicKey
+    //     })
+    //   })
+    //   t = stringify(t);
+    //   console.log(t);
+    //   t = SHA256(t).toString();
+    //   t = SHA256(t).toString(); // prevent Length Extension Attack
+    //   console.log(t);
+    //   if (!key.verify(t, coin.signature)) {
+    //     console.log('Invalid signature');
+    //     return false;
+    //   }
+      
+    //   // check unspent coin
+    //   let fSpentCoin = false;
+    //   // check in chain
+    //   for (var bi = coin.blockIdx; bi < blockChain.chain.length; bi++) {
+    //     if (fSpentCoin) {
+    //       break;
+    //     }
+    //     block = blockChain.chain[bi];
+    //     for (var ti = 0; ti < block.transactions.length; ti++) {
+    //       if (fSpentCoin) {
+    //         break;
+    //       }
+    //       if ((bi <= coin.blockIdx) && (ti <= coin.transIdx)) {
+    //         continue;
+    //       }
+    //       transaction = block.transactions[ti];
+    //       for (var ci = 0; ci < transaction.inputCoins.length; ci++) {
+    //         let c_ = transaction.inputCoins[ci];
+    //         if ((c_.blockIdx == coin.blockIdx) &&
+    //           (c_.transIdx == coin.transIdx) &&
+    //           (c_.coinIdx == coin.coinIdx)
+    //         ) {
+    //           fSpentCoin = true;
+    //           console.log('double spent in blockChain');
+    //           break;
+    //         }
+    //       }
+    //     }
+    //   }
+    //   // check in pending transactions
+    //   for (var ti = 0; ti < blockChain.currentTransactions.length; ti++) {
+    //     let transaction = blockChain.currentTransactions[ti];
+    //     for (var ci = 0; ci < transaction.inputCoins.length; ci++) {
+    //       let c_ = transaction.inputCoins[ci];
+    //       if ((c_.blockIdx == coin.blockIdx) &&
+    //         (c_.transIdx == coin.transIdx) &&
+    //         (c_.coinIdx == coin.coinIdx)
+    //       ) {
+    //         fSpentCoin = true;
+    //         console.log('double spent in pending transactions');
+    //         break;
+    //       }
+    //     }
+    //   }
+    //   if (fSpentCoin) {
+    //     console.log('double spent');
+    //     return false;
+    //   }
+    //   iCoins.push(Coin(oldCoin.addr, oldCoin.val, coin.blockIdx,
+    //     coin.transIdx, coin.coinIdx, coin.publicKey, coin.signature));
+    // }
+
+    /**
+     * outputCoins = [{addr: 'asefas', val: 1.2}]
+     */
+    // let nt = Transaction(iCoins, outputCoins);
+    let nt = Transaction(iCoins, outputCoins); // neccessary or not ???
+    if (nt) {
+      // nt.blockIdx = blockChain.chain.length
+      // nt.transIdx = blockChain.currentTransactions.length
+      // nt.coinIdx = iCoins.length // What
+      nt.index = blockChain.currentTransactions.length;
+      nt.seal();
+      blockChain.currentTransactions.push(nt)
+      console.log('added transaction with fee:', nt.fee());
+      return nt;
+    } else {
+      console.log('invalid transaction');
+      return false;
+    }
+  }
+
+  blockChain.validTx = (inputCoins, outputCoins, chain, previousPendingTxs) => {
     let iCoins = []
     for (let i = 0; i < inputCoins.length; i++) {
       let coin = inputCoins[i];
-      if (coin.blockIdx >= blockChain.chain.length) {
+      if (coin.blockIdx >= chain.length) {
         console.log('invalid blockIdx', coin.blockIdx);
         return false;
       }
-      let block = blockChain.chain[coin.blockIdx];
+      let block = chain[coin.blockIdx];
       if (coin.transIdx >= block.transactions.length) {
         console.log('invalid transIdx', coin.transIdx);
         return false;
@@ -107,11 +237,11 @@ module.exports = () => {
       // check unspent coin
       let fSpentCoin = false;
       // check in chain
-      for (var bi = coin.blockIdx; bi < blockChain.chain.length; bi++) {
+      for (var bi = coin.blockIdx; bi < chain.length; bi++) {
         if (fSpentCoin) {
           break;
         }
-        block = blockChain.chain[bi];
+        block = chain[bi];
         for (var ti = 0; ti < block.transactions.length; ti++) {
           if (fSpentCoin) {
             break;
@@ -134,8 +264,8 @@ module.exports = () => {
         }
       }
       // check in pending transactions
-      for (var ti = 0; ti < blockChain.currentTransactions.length; ti++) {
-        let transaction = blockChain.currentTransactions[ti];
+      for (var ti = 0; ti < previousPendingTxs.length; ti++) {
+        let transaction = previousPendingTxs[ti];
         for (var ci = 0; ci < transaction.inputCoins.length; ci++) {
           let c_ = transaction.inputCoins[ci];
           if ((c_.blockIdx == coin.blockIdx) &&
@@ -152,29 +282,11 @@ module.exports = () => {
         console.log('double spent');
         return false;
       }
+
       iCoins.push(Coin(oldCoin.addr, oldCoin.val, coin.blockIdx,
         coin.transIdx, coin.coinIdx, coin.publicKey, coin.signature));
     }
-
-    /**
-     * outputCoins = [{addr: 'asefas', val: 1.2}]
-     */
-    
-    // let nt = Transaction(iCoins, outputCoins);
-    let nt = Transaction(iCoins, outputCoins); // neccessary or not ???
-    if (nt) {
-      // nt.blockIdx = blockChain.chain.length
-      // nt.transIdx = blockChain.currentTransactions.length
-      // nt.coinIdx = iCoins.length // What
-      nt.index = blockChain.currentTransactions.length;
-      nt.seal();
-      blockChain.currentTransactions.push(nt)
-      console.log('added transaction with fee:', nt.fee());
-      return nt;
-    } else {
-      console.log('invalid transaction');
-      return false;
-    }
+    return iCoins;
   }
 
   blockChain.reward = (addr, amount) => {
