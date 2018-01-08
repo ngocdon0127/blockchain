@@ -31,7 +31,7 @@ if (!(process.env.PORT in keys)) {
   mainKey.loadKeyPair(keys[process.env.PORT].privateKey)
 }
 
-global.myCustomVars.const.run = false;
+global.myCustomVars.const.run = true;
 global.myCustomVars.const.address = publicKey2Address(keys[process.env.PORT].publicKey)
 global.myCustomVars.const.mainKey = mainKey
 
@@ -39,6 +39,8 @@ global.myCustomVars.const.mainKey = mainKey
 let nodes = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '../nodes.json')));
 
 setTimeout(() => {
+  // Connect procedure changed. Do nothing here.
+  return;
   if (!global.myCustomVars.const.run) {
     return;
   }
