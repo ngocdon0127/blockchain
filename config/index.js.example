@@ -1,6 +1,8 @@
 module.exports = {
 	app: {
-		// ip: '0.0.0.0'
-		ip: '127.0.0.1'
+		ip: '10.9.0.1',
+		host: 'http://10.9.0.1',
+		firstNode: 'http://10.9.0.1:2000',
+		maxNodes: 3
 	}
 }

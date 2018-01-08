@@ -31,7 +31,7 @@ if (!(process.env.PORT in keys)) {
   mainKey.loadKeyPair(keys[process.env.PORT].privateKey)
 }
 
-global.myCustomVars.const.run = true;
+global.myCustomVars.const.run = false;
 global.myCustomVars.const.address = publicKey2Address(keys[process.env.PORT].publicKey)
 global.myCustomVars.const.mainKey = mainKey
 

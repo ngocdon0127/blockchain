@@ -8,6 +8,7 @@ const Transaction = require('../models/Transaction');
 const CryptoJS = require('crypto-js');
 const SHA256 = CryptoJS.SHA256;
 const CommunicationUtils = new (require('../utils/CommunicationUtils'))();
+const CONFIG = require('../config')
 
 // const address = SHA256((new Date()).getTime() + '' + Math.random() * 1000000).toString();
 // const address = SHA256(process.env.PORT).toString();
@@ -385,10 +386,21 @@ router.get('/mixing', (req, res) => {
 })
 
 router.post('/connect', (req, res) => {
+  // console.log('receive connect request');
+  // console.log(req.body);
   if (!req.body.nodeUrl) {
     return res.status(400).json({
       status: 'error',
       error: 'Missing nodeUrl'
+    })
+  }
+  // console.log(req.body.nodeUrl.toLowerCase());
+  // console.log(CONFIG.app.host + ':' + process.env.PORT);
+  // console.log(req.body.nodeUrl.toLowerCase().localeCompare(CONFIG.app.host + ':' + process.env.PORT) == 0);
+  if (req.body.nodeUrl.toLowerCase().localeCompare(CONFIG.app.host + ':' + process.env.PORT) == 0) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'Cannot connect to self'
     })
   }
   async (() => {
@@ -428,6 +440,12 @@ router.post('/connect', (req, res) => {
         return res.status(200).json({
           status: 'success',
           msg: `Node ${req.body.nodeUrl} already added`
+        })
+      }
+      if (blockChain.nodes.length >= CONFIG.app.maxNodes) {
+        return res.status(200).json({
+          status: 'success',
+          msg: `Maximum nodes exceed`
         })
       }
       blockChain.newNode(req.body.nodeUrl);
@@ -590,5 +608,9 @@ setInterval(() => {
     // })
   })()
 }, 3000)
+
+
+
+CommunicationUtils.connectNode(CONFIG.app.firstNode, blockChain)
 
 module.exports = router;
