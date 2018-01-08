@@ -126,13 +126,13 @@ router.get('/mine', (req, res) => {
   })
 })
 
-setInterval(function () {
-  if (Math.random() >= 0.5) {
-    global.myCustomVars.const.mining = 1;
-    mine();
-    global.myCustomVars.const.mining = 0
-  }
-}, 3000)
+// setInterval(function () {
+//   if (Math.random() >= 0.5) {
+//     global.myCustomVars.const.mining = 1;
+//     mine();
+//     global.myCustomVars.const.mining = 0
+//   }
+// }, 3000)
 
 function mine() {
   if (!blockChain.currentTransactions || (blockChain.currentTransactions.length < 1)) {
@@ -589,6 +589,6 @@ setInterval(() => {
     //   chain: blockChain.chain
     // })
   })()
-}, 10000)
+}, 3000)
 
 module.exports = router;
