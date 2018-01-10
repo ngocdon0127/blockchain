@@ -218,10 +218,10 @@ module.exports = () => {
       t.inputs = [];
       inputCoins.map(ic => {
         t.inputs.push({
-          blockIdx: coin.blockIdx,
-          transIdx: coin.transIdx,
-          coinIdx: coin.coinIdx,
-          publicKey: coin.publicKey
+          blockIdx: ic.blockIdx,
+          transIdx: ic.transIdx,
+          coinIdx: ic.coinIdx,
+          publicKey: ic.publicKey
         })
       })
       t = stringify(t);
